@@ -1,4 +1,16 @@
-# HarvardxPokemon
+---
+title: "Harvardx Data Science Choose-Your-Own-Project"
+author: "Da Xuan"
+date: "6/8/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction of dataset and purpose of current project
+
 This data is downloaded from Kaggle (https://www.kaggle.com/abcsds/pokemon).
 The data set includes 800 observations with data including 1) Pokemon name, 2) Type 1 Element, 3) Type 2 Element, 4) Total Stats, 5) Health Point, 6) Attack point, 7) Defense point, 8) Special Attack point, 9) Special Defense point, 10) Speed point, 11) Generation, and 12) Legendary class. 
 
@@ -6,3 +18,18 @@ The data set includes 800 observations with data including 1) Pokemon name, 2) T
 The data consists of ALL the pokemons and their stats. That is, the data is not a 'sample' of a population; the data includes all observation in the population.
 
 The task is to correctly classify the types of pokemon using Machine Learning models based on the variables in the dataset. 
+
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
