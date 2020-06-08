@@ -5,4 +5,4 @@ The data set includes 800 observations with data including 1) Pokemon name, 2) T
 
 The data consists of ALL the pokemons and their stats. That is, the data is not a 'sample' of a population; the data includes all observation in the population.
 
-The task is to correctly classify the types of pokemon using Machine Learning models based on the variables in the dataset. 
+The task is to find out the dimensions that best describes the dataset (ie., reduce the dimensions of the dataset), and also identify the variables that best predicts the element of the Pokemon (ie., 'Type 1'). 
