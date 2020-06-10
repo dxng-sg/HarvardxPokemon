@@ -1,8 +1,6 @@
 # HarvardxPokemon
 This data is downloaded from Kaggle (https://www.kaggle.com/abcsds/pokemon).
-The data set includes 800 observations with data including 1) Pokemon name, 2) Type 1 Element, 3) Type 2 Element, 4) Total Stats, 5) Health Point, 6) Attack point, 7) Defense point, 8) Special Attack point, 9) Special Defense point, 10) Speed point, 11) Generation, and 12) Legendary class. 
+The data set includes 800 observations with information, including 1) Pokemon name (Name), 2) Type 1 Element (`Type 1`), 3) Type 2 Element (`Type 2`), 4) Total Stats (Total), 5) Health Point (HP), 6) Attack point (Attack), 7) Defense point (Defense), 8) Special Attack point (Sp. Atk), 9) Special Defense point (Sp. Def), 10) Speed point (Speed), 11) Generation (Generation), and 12) Legendary class (Legendary). 
 
 
-The data consists of ALL the pokemons and their stats. That is, the data is not a 'sample' of a population; the data includes all observation in the population.
-
-The task is to find out the dimensions that best describes the dataset (ie., reduce the dimensions of the dataset), and also identify the variables that best predicts the element of the Pokemon (ie., 'Type 1'). 
+It is to note that the data consists of ALL the pokemons and their stats. That is, the data is not a 'sample' of a population; the data includes all observation in the population. The task is 1) to create a linear combination of variables that best predict Pokemon Types, and 2) determine the structure and latent variables of the dataset by creating linear combinations of variables (ie., reduce the dimensions of the dataset). 
