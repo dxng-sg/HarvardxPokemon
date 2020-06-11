@@ -3,6 +3,10 @@ if(!require(caret)) install.packages("caret", repos = "http://cran.us.r-project.
 if(!require(matrixStats)) install.packages("matrixStats", repos = "http://cran.us.r-project.org")
 if(!require(Rborist)) install.packages("Rborist", repos = "http://cran.us.r-project.org")
 if(!require(rpart)) install.packages("rpart", repos = "http://cran.us.r-project.org")
+if(!require(devtools)) install.packages("devtools", repos = "http://cran.us.r-project.org")
+if(!require(ggfortify)) install.packages("ggfortify", repos = "http://cran.us.r-project.org")
+if(!require(ggplot2)) install.packages("ggplot2", repos = "http://cran.us.r-project.org")
+if(!require(gridExtra)) install.packages("gridExtra", repos = "http://cran.us.r-project.org")
 ################################
 # Download source file
 ################################
@@ -314,19 +318,24 @@ pca$rotation
 
 # scree plot shows that only 2 components are needed to explain most of the data variance
 screeplot(pca)
-biplot(pca, scale = 0)
+plot_1 <- autoplot(pca, 
+         data=x,
+         loadings=TRUE,
+         loadings.colour='blue',
+         loadings.label = TRUE, 
+         loadings.label.size=3)
 
 
-data.frame(pca$x[,1:2],Type_1 = factor(dat$`Type 1`))%>%
+plot_2 <- data.frame(pca$x[,1:2],Type_1 = factor(dat$`Type 1`))%>%
   ggplot(aes(PC1, PC2, 
              fill = Type_1,
              color = Type_1))+
   geom_point(size=2, 
-             shape = 21)+ 
-  geom_text(aes(label = Type_1))+
+             shape = 21,show.legend = FALSE)+ 
+  geom_text(aes(label = Type_1), show.legend = FALSE)+
   coord_fixed(ratio=1)
 
-
+grid.arrange(plot_1,plot_2, ncol=2)
 
 data.frame(pca$x[,1:2],Type_1 = factor(dat$`Type 1`))%>%
   ggplot(aes(PC1, PC2, 
