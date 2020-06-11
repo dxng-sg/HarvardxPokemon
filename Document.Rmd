@@ -1,6 +1,6 @@
 ---
 title: "Harvardx Data Science Choose-Your-Own-Project"
-author: "Da Xuan"
+author: "Ng Da Xuan"
 date: "6/8/2020"
 output: pdf_document
 ---
@@ -11,32 +11,57 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## INTRODUCTION
 
-This data is downloaded from Kaggle (https://www.kaggle.com/abcsds/pokemon).
-The data set includes 800 observations with data including 1) Pokemon name (Name), 2) Type 1 Element (`Type 1`), 3) Type 2 Element (`Type 2`), 4) Total Stats (Total), 5) Health Point (HP), 6) Attack point (Attack), 7) Defense point (Defense), 8) Special Attack point (Sp. Atk), 9) Special Defense point (Sp. Def), 10) Speed point (Speed), 11) Generation (Generation), and 12) Legendary class (Legendary). 
+The dataset is downloaded from Kaggle (https://www.kaggle.com/abcsds/pokemon). It includes 800 observations with data including:
+1) Pokemon name (Name), 
+2) Type 1 Element (`Type 1`), 
+3) Type 2 Element (`Type 2`), 
+4) Total Stats (Total), 
+5) Health Point (HP), 
+6) Attack point (Attack), 
+7) Defense point (Defense), 
+8) Special Attack point (Sp. Atk), 
+9) Special Defense point (Sp. Def), 
+10) Speed point (Speed), 
+11) Generation (Generation), and 
+12) Legendary class (Legendary). 
 
 
-It is to note that the data consists of ALL the pokemons and their stats. That is, the data is not a 'sample' of a population; the data includes all observation in the population. The task is 1) to create a linear combination of variables to predict Pokemon Types, and 2) determine the structure and latent variables of the dataset by creating linear combinations of variables (ie., reduce the dimensions of the dataset). 
+It is to note that the data consists of ALL the pokemons and their stats. That is, the data is not a 'sample' of a population; the data includes all observation in the population. The task is 
+1) to create a linear combination of variables to predict Pokemon Types, and 
+2) determine the structure and latent variables of the dataset by creating linear combinations of variables (ie., reduce the dimensions of the dataset). 
 
-The key steps taken to complete the tasks were: 1) exploring the dataset and understanding the data structure, 2) exploring the relationship between the variables, 3) selecting the best model for predicting Pokemon's types (ie., 'Type 1`), and 4) obtaining a principal components analysis of the data.
+
+The key steps taken to complete the tasks were: 
+1) exploring the dataset and understanding the data structure, 
+2) exploring the relationship between the variables, 
+3) selecting the best model for predicting Pokemon's types (ie., 'Type 1`), and 
+4) obtaining a principal components analysis of the data.
+
 
 The following are the libraries used in exploring the data. 
 
 
-```{r libraries}
-
-
+```{r libraries,warning=FALSE,message=FALSE}
+if(!require(tidyverse)) install.packages("tidyverse", repos = "http://cran.us.r-project.org")
+if(!require(caret)) install.packages("caret", repos = "http://cran.us.r-project.org")
+if(!require(matrixStats)) install.packages("matrixStats", repos = "http://cran.us.r-project.org")
+if(!require(Rborist)) install.packages("Rborist", repos = "http://cran.us.r-project.org")
+if(!require(rpart)) install.packages("rpart", repos = "http://cran.us.r-project.org")
+if(!require(devtools)) install.packages("devtools", repos = "http://cran.us.r-project.org")
+if(!require(ggfortify)) install.packages("ggfortify", repos = "http://cran.us.r-project.org")
+if(!require(ggplot2)) install.packages("ggplot2", repos = "http://cran.us.r-project.org")
+if(!require(gridExtra)) install.packages("gridExtra", repos = "http://cran.us.r-project.org")
 ```
 
 ## DATA PREPARATION
 
 * Download data
-```{r data source}
+```{r data source, warning=FALSE,message=FALSE, results='hide'}
 url <- "https://raw.githubusercontent.com/dxng-sg/HarvardxPokemon/master/datasets_121_280_Pokemon.csv"
 dl <- tempfile()
 download.file(url, dl)
 dat <- read_csv(dl)
 file.remove(dl)
-
 ```
 
 
@@ -44,9 +69,450 @@ file.remove(dl)
 
 * Exploring the dataset
 
-```{r structure, tidy=TRUE, message=FALSE, warning = FALSE}
+```{r structure, tidy=TRUE, message=FALSE, warning = FALSE, collapse=TRUE}
 ## To identify the data type of each variables (ie., factor, numeric, or character)
 head(dat)
 ```
 
+There are a total of 13 variables: 1) the observation number, `#`, is of *dbl* class; 2) the name of the Pokemon, `Name`, is of *character* class; 3) the first element of Pokemon, `Type 1`, is of *character* class; 4) the second element of Pokemon, `Type 2`, is of *character* class; 5) the total stats, `Total`, is of *dbl* class; 6) the health point, `HP`, is of *dbl* class; 7) the attack stats, `Attack`, is of *dbl* class; 8) the defense stats, `Defense`, is of *dbl* class; 9) the special attack stats, `Sp. Atk`, is of *dbl* class; 10) the special defense stats, `Sp. Def`, is of *dbl* class; 11) the speed stats, `Speed`, is of *dbl* class; 12) the Generation levels, `Generation`, is of *dbl* class; & 13) the Legendary level, `Legendary`, is of *logical* class. 
 
+
+```{r structure01, tidy=TRUE, message=FALSE, warning = FALSE, collapse=TRUE}
+## To identify the total number of observations and variables
+dim(dat)
+
+## The number of levels within Pokemon Types (our classification)
+levels(as.factor(dat$`Type 1`))
+```
+There are a total of 800 Pokemons, and they are categorised into 18 different types. 
+
+
+```{r plot01, tidy=TRUE,message=FALSE,warning=FALSE}
+# To find the distribution of Type 1 pokemon
+dat%>%
+  group_by(`Type 1`)%>%
+  mutate(count=n())%>%
+  ungroup()%>%
+  ggplot(aes(`Type 1`))+
+  geom_bar()+
+  geom_label(aes(x=`Type 1`, 
+                 y = count+5, 
+                 label = count))+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.2))+
+  ggtitle("Distribution of Type 1 Pokemon")
+```
+The above plot shows that there are only a few Pokemons of Type 1 'Flying' & 'Fairy'; while, there are many Pokemons of Type 1 'Water', ' Normal', 'Grass', & 'Bug'. 
+
+```{r data01, tidy=TRUE,message=FALSE,warning=FALSE,collapse=TRUE}
+# To find the proportion of pokemon with Type 2 characteristics
+mean(is.na(dat$`Type 2`) == FALSE)
+```
+Fifty-two percent of the Pokemons have a Type 2 characteristic.
+
+
+```{r plot02, tidy=TRUE,warning=FALSE,message=FALSE, fig.height=7}
+# To find the distribution of proportion of `Type 1` Pokemons with `Type 2` 
+dat%>%
+  group_by(`Type 1`)%>%
+  mutate(count=n())%>%
+  ungroup()%>%
+  ggplot(aes(`Type 1`))+
+  geom_bar(aes(fill = `Type 2`),colour = "#0E0A09")+
+  theme(axis.text.x=element_text(angle = 90, hjust = 1, vjust = 0.2))+
+  ggtitle("Distribution of `Type 1` and `Type 2`")
+```
+
+
+
+The above plot shows that Bug, Dark, Dragon, Ghost, Rock, Steel are likely to have a `Type 2` characteristic (indicated by a larger proportion of colors within each bar), while Fairy, Fighting, Psychic are less likely to have a `Type 2` characteristic (indicated by a larger proportion of greys within each bar).
+
+
+
+```{r plot03, tidy=TRUE,warning=FALSE,message=FALSE,fig.width=8,fig.height=8}
+# To find the distribution of Type 2 within each `Type 1`
+dat%>%
+  filter(is.na(`Type 2`) == FALSE)%>%
+  group_by(`Type 1`, `Type 2`)%>%
+  mutate(count=n())%>%
+  ungroup()%>%
+  ggplot(aes(`Type 2`))+
+  geom_bar(aes(fill = `Type 2`))+
+  facet_wrap(~`Type 1`, ncol = 3)+
+  geom_text(aes(x=`Type 2`, 
+                y = count+3, 
+                label = count))+
+  theme(axis.text.x=element_text(angle = 90, hjust = 1, vjust = 0.2))+
+  ggtitle("Distribution of `Type 2` (within each 'Type 1` elements)")
+```
+The above plots show that within some `Type 1` class, there is an even spread of `Type 2` class. For example, within "Water" & "Rock" `Type 1` Pokemons, there is a even spread of `Type 2` class. 
+
+
+However, for some `Type 1` class, only specific `Type 2` are associated with them. For example, "Ghost" `Type 1` are closely associated with "Grass; "Bug" `Type 1` are associated with "Flying" & "Poison"; "Grass" `Type 1` are associated with "Poison"; & "Normal" `Type 1` are associated with "Flying".
+
+
+```{r plot04, tidy=TRUE,warning=FALSE,message=FALSE}
+# To find the overall distribution of Type 2 pokemon
+dat%>%
+  filter(is.na(`Type 2`) == FALSE) %>%
+  group_by(`Type 2`)%>%
+  mutate(count = n())%>%
+  ungroup%>%
+  ggplot(aes(`Type 2`))+
+  geom_bar()+
+  geom_label(aes(x=`Type 2`, 
+                 y = count + 4, 
+                 label = count))+
+  theme(axis.text.x=element_text(angle = 90, hjust = 1, vjust = 0.2))+
+  ggtitle("Distribution of `Type 2`")
+```
+The above plot shows that the most common `Type 2` class is "Flying".
+
+
+
+```{r plot05, tidy=TRUE, warning=FALSE,message=FALSE}
+# To identify clusters of `Type 1` and `Type 2` 
+dat%>%
+  ggplot(aes(x = `Type 1`, y = `Type 2`))+
+  geom_jitter()+
+  theme(axis.text.x=element_text(angle = 90, hjust = 1, vjust = 0.2))
+```
+
+The above plot confirms several clusters. For example `Type 1` "Normal" with `Type 2` "Flying"; `Type 1` "Grass" with `Type 2` "Poison"; `Type 1` "Bug" with `Type 2` "Poison".
+
+
+```{r data02, tidy=TRUE,warning=FALSE,message=FALSE, collapse=TRUE}
+# The summary statistics for the variables
+summary(dat[5:13])
+```
+For visualisation of the summary statistics, please refer to the boxplots attached below this paragraph.
+
+
+```{r data03, tidy=TRUE,warning=FALSE,message=FALSE, results='hold'}
+## Explore how the various variables are distributed across Type 1 characteristics
+# Total against `Type 1`
+dat%>%
+  ggplot(aes(y = Total, 
+             x = `Type 1`))+
+  geom_boxplot(aes(color=`Type 1`), 
+               show.legend = FALSE)+
+  theme(axis.text.x=element_text(angle = 90, 
+                                 hjust = 1, 
+                                 vjust = 0.2))+
+  ggtitle("Boxplot of `Total` against Type 1")
+
+# HP against `Type 1`
+dat%>%
+  ggplot(aes(y = HP, 
+             x = `Type 1`))+
+  geom_boxplot(aes(color=`Type 1`),
+               show.legend = FALSE)+
+  theme(axis.text.x=element_text(angle = 90, 
+                                 hjust = 1, 
+                                 vjust = 0.2))+
+  ggtitle("Boxplot of `HP` against Type 1")
+
+# Attack against `Type 1`
+dat%>%
+  ggplot(aes(y = Attack, 
+             x = `Type 1`))+
+  geom_boxplot(aes(color=`Type 1`),
+               show.legend = FALSE)+
+  theme(axis.text.x=element_text(angle = 90, hjust = 1, vjust = 0.2))+
+  ggtitle("Boxplot of `Attack` against Type 1")
+
+# Defense against `Type 1`
+dat%>%
+  ggplot(aes(y = Defense, 
+             x = `Type 1`))+
+  geom_boxplot(aes(color=`Type 1`),
+               show.legend = FALSE)+  
+  theme(axis.text.x=element_text(angle = 90, hjust = 1, vjust = 0.2))+
+  ggtitle("Boxplot of `Defense` against Type 1")
+
+# Sp. Atk against `Type 1`
+dat%>%
+  ggplot(aes(y = `Sp. Atk`, 
+             x = `Type 1`))+
+  geom_boxplot(aes(color=`Type 1`),
+               show.legend = FALSE)+  
+  theme(axis.text.x=element_text(angle = 90, hjust = 1, vjust = 0.2))+
+  ggtitle("Boxplot of `Sp. Atk` against Type 1")
+
+# Sp. Def against `Type 1`
+dat%>%
+  ggplot(aes(y = `Sp. Def`, 
+             x = `Type 1`))+
+  geom_boxplot(aes(color=`Type 1`),
+               show.legend = FALSE)+  
+  theme(axis.text.x=element_text(angle = 90, hjust = 1, vjust = 0.2))+
+  ggtitle("Boxplot of Sp. Def` against Type 1")
+
+# Speed against `Type 1`
+dat%>%
+  ggplot(aes(y = Speed, 
+             x = `Type 1`))+
+  geom_boxplot(aes(color=`Type 1`),
+               show.legend = FALSE)+  
+  theme(axis.text.x=element_text(angle = 90, hjust = 1, vjust = 0.2))+
+  ggtitle("Boxplot of `Speed` against Type 1")
+```
+Just from these graphs, there are no visible difference between Pokemon Types in each of these variables. 
+
+
+
+
+```{r plot06, fig.height=7}
+## Distribution of Generation within each `Type 1` class
+dat%>%
+  ggplot(aes(x = Generation))+
+  geom_bar()+
+  facet_wrap(~`Type 1`, ncol = 3)+
+  ggtitle("Distribution of Generation (within each `Type 1`)")
+```
+
+The Generation within each Pokemon Types are pretty evenly distributed. 
+
+
+```{r plot07, fig.height=8,fig.width=8}
+## Distribution of `Type 1` class within each generation levels
+dat%>%
+  filter(`Type 1` != "Flying")%>%
+  group_by(Generation, `Type 1`)%>%
+  mutate(count=n())%>%
+  ungroup()%>%
+  ggplot(aes(x = Generation, 
+             y = count,
+             fill = `Type 1`))+
+  geom_bar(stat="identity",
+           colour = "#0E0A09",
+           width = 0.7,
+           position = position_dodge(width = 0.8))+
+  geom_text(position=position_dodge(width=0.8), 
+            aes(label=`Type 1`),
+            hjust=0,
+            vjust=0,
+            angle=90)+
+  ylim(0, 32)+
+  ggtitle("Distribution of `Type 1` within each Generation")
+```
+There are more "Water" and "Normal" types Pokemons in Generation levels 1 - 5, while there are more "Rock", "Ghost", and "Fairy" types Pokemons in Generation level 6. 
+
+
+
+```{r plot08, fig.height=8}
+## Distribution of Legendary within each `Type 1` class
+dat%>%
+  ggplot(aes(x = Legendary))+
+  geom_bar()+
+  facet_wrap(~`Type 1`, ncol = 3)+
+  ggtitle("Distribution of Legendary status (within each `Type 1`)")
+```
+It is more likely to capture a non-legendary pokemon than a legendary pokemon among all `Type 1`. It also appeared that you will have higher chance of capturing a legendary pokemon when you capture a "Dragon" than the other types.
+
+
+```{r plot09, fig.height=8, warning=FALSE}
+## Distribution of `Type 1` class within each Legendary level
+dat%>%
+  filter(`Type 1` != "Flying")%>%
+  group_by(Legendary, `Type 1`)%>%
+  mutate(count=n())%>%
+  ungroup()%>%
+  ggplot(aes(x = Legendary, 
+             y = count,
+             fill = `Type 1`))+
+  geom_bar(stat="identity",
+           colour = "#0E0A09",
+           width = 0.7,
+           position = position_dodge(width = 0.8))+
+  geom_text(position=position_dodge(width=0.8), 
+            aes(label=`Type 1`),
+            hjust=0,
+            vjust=0,
+            angle=90)+
+  ylim(0, 32)+
+  ggtitle("Distribution of `Type 1` within each Legendary class")
+```
+Among Legendary pokemon, there are more "Psychic" and "Dragon" than the other types.
+
+
+
+
+```{r data04, tidy=TRUE,warning=FALSE,message=FALSE, results='hold'}
+## Identifying the variables that has the least variation
+x <- as.matrix(dat[5:11])
+y <- factor(dat$`Type 1`)
+sds<-colSds(x)
+qplot(sds)
+```
+Continuous variables(ie., Total, HP, Attack, Defense, 'Sp. Atk', 'Sp. Def', Speed) are chosen to build the prediction model as they explained for the most variance within the dataset. Within the 7 chosen variables, 'Total' carries the highest sds.
+
+## METHOD AND ANALYSIS
+
+### Finding the most accurate class prediction model
+
+* Knn Model
+
+```{r data05, tidy=TRUE, warning=FALSE,message=FALSE, results='hold', collapse=TRUE}
+## Knn model
+set.seed(2007, sample.kind="Rounding")
+fit_knn <- knn3(y ~ x, data = dat, k = 1)
+y_hat_knn<-predict(fit_knn, dat, type = "class")
+cm <- confusionMatrix(y_hat_knn,y)
+cm$overall["Accuracy"]
+cm$byClass[,1:2]
+```
+
+
+Using knn model (with a k = 1) predicts a high accuracy (99.4%), indicating that each Pokemon can be uniquely predicted by the variables. The model reveals that "Electric", "Fairy", "Fire", "Flying", "Water" are harder to detect; while "Dark", "Electric", "Fire", "Flying", "Grass" are often incorrectly detected.
+
+
+
+*Qda Model
+
+```{r data06, tidy=TRUE, warning=FALSE,message=FALSE,results='hold', collapse=TRUE}
+## QDA model
+fit_lda <- train(`Type 1` ~ HP + Attack + Defense + `Sp. Atk` + `Sp. Def` + Speed + Generation + Legendary, 
+                 method = "lda", 
+                 data = dat)
+y_hat_lda <- predict(fit_lda, dat)
+cm <- confusionMatrix(y_hat_lda,y)
+cm$overall["Accuracy"]
+cm$byClass[,1:2]
+```
+The accuracy of qda model is low and is not a good model for the dataset. 
+
+
+
+
+*Classification and Regression Tree (CART)
+
+```{r data07, tidy=TRUE, warning=FALSE,message=FALSE,results='hold'}
+## Use decision tree
+set.seed(1985, sample.kind="Rounding") #set.seed is created to facilitate discussion
+fit_rpart<-train(x,y,
+                   method = "rpart",
+                   tuneGrid=data.frame(cp=seq(0,0.1, 
+                                              len=25)),
+                   control = rpart.control(minsplit = 0))
+confusionMatrix(predict(fit_rpart,x),y)$overall["Accuracy"]
+plot(fit_rpart$finalModel, margin = 0.1)
+text(fit_rpart$finalModel, cex = 0.75)
+```
+
+Using CART produces a decision tree that gives us some insight into the properties (e.g., defense, attack, speed, etc) of each type of Pokemon, however the model is low in accuracy.
+
+* Random Forest
+
+```{r data08, tidy=TRUE,warning=FALSE,message=FALSE,results='hold'}
+#Use Random Forest
+set.seed(2007, sample.kind="Rounding")
+grid <- data.frame(mtry = c(1, 3, 5, 7, 9))
+control<-trainControl(method = "cv", number = 5)
+fit_rf <- train(x, y,
+                  method = "rf",
+                  ntree = 50,
+                  trControl = control,
+                  tuneGrid = grid,
+                  nSamp = 700)
+ggplot(fit_rf)
+fit_rf$bestTune
+y_hat_rf <- predict(fit_rf,dat)
+cm <- confusionMatrix(y_hat_rf,y)
+cm$overall["Accuracy"]
+```
+
+```{r data09, tidy=TRUE,warning=FALSE,message=FALSE}
+##Finding the class with the lowest sensitivity and specificity
+cm$byClass[,1:2]
+```
+RandomForest model carries a high accuracy. Similar to knn model, the model finds "Fairy", "Fire", "Flying", "Grass", "Ice", "Steel", "Water" harder to detect; while "Dark", "Electric", "Psychic", "Water" are often incorrectly detected.
+
+
+```{r data10, tidy=TRUE,warning=FALSE,message=FALSE,collapse=TRUE}
+##Identifying the variables that are the most predictive of `Type 1` class
+varImp(fit_rf)
+```
+Using RandomForest, We have identified 'Speed' as the most important variable for predicting 'Type 1'. 
+
+
+## Results
+
+### 1) Fitting the best class prediction model
+
+It is to note that this project did not partition the dataset (ie., into 'Training set' and 'Testing set'), as there is no need for us to train a model to predict an unknown population parameter. There is also no need to use a sample to estimate a population parameter as the dataset includes all observation present in the population.  
+
+As shown below, rf model is the best predictive model.
+
+```{r data11,tidy=TRUE,warning=FALSE,message=FALSE,collapse=TRUE}
+cm <- confusionMatrix(y_hat_rf,y)
+cm$overall["Accuracy"]
+```
+
+
+### 2) Performing PCA
+
+```{r data12, tidy=TRUE,warning=FALSE,message=FALSE}
+## Correlation between the continuous variables 
+cor(dat[5:11])
+```
+From the correlation coefficient, most of the variables are moderately correlated with each other (r > 0.3). 
+
+
+```{r data13, tidy=TRUE,warning=FALSE,message=FALSE,collapse=TRUE}
+# Perform PCA to isolate the factors, explaining the high correlations among variables
+pca <- prcomp(x, scale = TRUE)
+summary(pca)
+pca$rotation
+```
+Most of the variance (53%) is explained by 2 components. 
+```{r plot10, tidy=TRUE,warning=FALSE,message=FALSE}
+screeplot(pca)
+```
+
+Scree plot shows that 2 components are needed to explain most of the data variance.
+
+```{r plot 11, tidy=TRUE,warning=FALSE,message=FALSE,fig.height=7,fig.width=8}
+plot_1 <- autoplot(pca, 
+         data=x,
+         loadings=TRUE,
+         loadings.colour='blue',
+         loadings.label = TRUE, 
+         loadings.label.size=3)
+
+
+plot_2 <- data.frame(pca$x[,1:2],Type_1 = factor(dat$`Type 1`))%>%
+  ggplot(aes(PC1, PC2, 
+             fill = Type_1,
+             color = Type_1))+
+  geom_point(size=2, 
+             shape = 21,show.legend = FALSE)+ 
+  geom_text(aes(label = Type_1), show.legend = FALSE)+
+  coord_fixed(ratio=1)
+
+grid.arrange(plot_1,plot_2, ncol=2)
+```
+
+
+The above plot shows that most of the Pokemons can be separated by variables 'Total', 'Attack' & 'Sp. Atk' on the x-axis, and by variables 'Speed' & 'Defense' on the y-axis. It appears that Component 1 separates between Strong Attacking Types Pokemons from Weak Attacking Types Pokemons, while Component 2 separates between Fast Pokemons from Strong Defense Type Pokemons.
+
+```{r plot12}
+data.frame(pca$x[,1:2],Type_1 = factor(dat$`Type 1`))%>%
+  ggplot(aes(PC1, PC2, 
+             fill = Type_1,
+             color = Type_1))+
+  facet_wrap(~Type_1)+
+  geom_point(size=2, 
+             shape = 21,show.legend = FALSE)+ 
+  coord_fixed(ratio=1)
+```
+
+The above plot provides insight into the capabilities (ie., Attack, Speed, Defense) of each Pokemon types by plotting the components for each Pokemon Types. 
+
+## Conclusion
+This topic was chosen out of personal curiosity. This project attempts to predict the type of Pokemon based on its properties (e.g., HP, Attack stats, etc) and to discover the underlying structure/dimensions that best classifies all the Pokemons.
+
+Using randomForest model, i was able to predict class membership close to 98% of the time. Using the model, it was also revealed that `Speed` is the strongest predictor of `Type 1` membership.
+
+Using just 2 components, I was able to predict close to 68% of the variance. 
+
+The work summarised in this report will benefit players in determining the class of their opponent's Pokemons or their own, and also helped them in choosing the best Pokemon Types for battle. 
