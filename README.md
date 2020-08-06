@@ -1,5 +1,7 @@
 # HarvardxPokemon
-This data is downloaded from Kaggle (https://www.kaggle.com/abcsds/pokemon).
+This project is submitted to satisfy the module requirement for PROFESSIONAL CERTIFICATE IN DATA SCIENCE by HARVARDX. 
+
+The data used in this project is downloaded from Kaggle (https://www.kaggle.com/abcsds/pokemon).
 The data set includes 800 observations with information, including 1) Pokemon name (`Name`), 2) Type 1 Element (`Type 1`), 3) Type 2 Element (`Type 2`), 4) Total Stats (`Total`), 5) Health Point (`HP`), 6) Attack point (`Attack`), 7) Defense point (`Defense`), 8) Special Attack point (`Sp. Atk`), 9) Special Defense point (`Sp. Def`), 10) Speed point (`Speed`), 11) Generation (`Generation`), and 12) Legendary class (`Legendary`). 
 
 
